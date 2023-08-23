@@ -44,13 +44,3 @@ def build_query(domain_name,record_type):
     question = DNSQuestion(encode_domain_name(domain_name),record_type,CLASS_IN)
     query = header_to_bytes(header) + question_to_bytes(question)
     return query
-
-import socket
-
-query = build_query("google.com",1)
-
-sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-
-sock.sendto(query,("8.8.8.8",53))
-
-response, _ = sock.recvfrom(1024)
