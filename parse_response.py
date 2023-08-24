@@ -1,4 +1,4 @@
-from build_query import DNSHeader, DNSQuestion, build_query
+from build_query import DNSHeader, DNSQuestion
 from dataclasses import dataclass
 from typing import List
 
@@ -20,7 +20,7 @@ class DNSPacket:
 
 import struct
 def parse_header(reader):
-    items = struct.unpack("!HHHHHH",reader.read(12))
+    items = struct.unpack("!HHHHHH",reader.read(12))                           # H: 2-byte integer, I: 4-byte integer
     return DNSHeader(*items)
 
 def decode_simple_name(reader):
@@ -33,13 +33,14 @@ def decode_simple_name(reader):
             parts.append(reader.read(length))
     return b'.'.join(parts)
 
+## HANDLING DNS COMPRESSION
 def decode_compressed_name(length,reader):
-    name_pointer_bytes = bytes([length & 0b0011_1111]) + reader.read(1)
-    name_pointer = struct.unpack("!H",name_pointer_bytes)[0]
-    current_pos = reader.tell()
-    reader.seek(name_pointer)
-    result = decode_simple_name(reader)
-    reader.seek(current_pos)
+    name_pointer_bytes = bytes([length & 0b0011_1111]) + reader.read(1)                 
+    name_pointer = struct.unpack("!H",name_pointer_bytes)[0]                    # calcukate the integer offset from compressed name
+    current_pos = reader.tell()                                                 # save reader position to come back later
+    reader.seek(name_pointer)                                                   # go to pointer location for getting the name 
+    result = decode_simple_name(reader)                                         # normal name, so decode using prev way
+    reader.seek(current_pos)                                                    # reset pointer after the compressed record name
     return result
 
 def parse_question(reader):
@@ -49,7 +50,7 @@ def parse_question(reader):
 
 def parse_record(reader):
     name = decode_simple_name(reader)
-    type_,class_,ttl,data_length = struct.unpack("!HHIH",reader.read(10))
+    type_,class_,ttl,data_length = struct.unpack("!HHIH",reader.read(10))       # type,class and data length are 2 bytes each, ttl takes 4 bytes
     TYPE_A = 1
     TYPE_NS = 2
     if(type_ == TYPE_A):
