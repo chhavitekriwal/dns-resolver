@@ -50,9 +50,16 @@ def parse_question(reader):
 def parse_record(reader):
     name = decode_simple_name(reader)
     type_,class_,ttl,data_length = struct.unpack("!HHIH",reader.read(10))
-    data = reader.read(data_length)
-    ip = ".".join([str(x) for x in data])
-    return DNSRecord(name,type_,class_,ttl,ip)
+    TYPE_A = 1
+    TYPE_NS = 2
+    if(type_ == TYPE_A):
+        data = ".".join([str(x) for x in reader.read(data_length)])
+    elif type_ == TYPE_NS:
+        data = decode_simple_name(reader)
+    else:
+        data = reader.read(data_length)
+    return DNSRecord(name,type_,class_,ttl,data)
+
 from io import BytesIO
 def parse_dns_packet(data):
     reader = BytesIO(data)
@@ -62,16 +69,3 @@ def parse_dns_packet(data):
     authorities = [parse_record(reader) for _ in range(header.num_authorities)]
     additionals = [parse_record(reader) for _ in range(header.num_additionals)]
     return DNSPacket(header,questions,answers,authorities,additionals)
-
-import socket
-
-def lookup_domain(domain):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    TYPE_A = 1
-    CLASS_IN = 1
-    sock.sendto(build_query(domain,TYPE_A),("8.8.8.8",53))    
-    response, _ = sock.recvfrom(1024)            # Check again why 1024 here
-    packet = parse_dns_packet(response)
-    return packet
-
-print(lookup_domain("chhavitekriwal.me"))
