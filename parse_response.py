@@ -18,9 +18,25 @@ class DNSPacket:
     authorities: List[DNSRecord]
     additionals: List[DNSRecord]
 
+def parse_flags(flags_int):
+    flags = {
+        'QR': (flags_int >> 15) & 0b1,
+        'OPCODE': (flags_int >> 11) & 0b1111,
+        'AA': (flags_int >> 10) & 0b1,
+        'TC': (flags_int >> 9) & 0b1,
+        'RD': (flags_int >> 8) & 0b1,
+        'RA': (flags_int >> 7) & 0b1,
+        'Z': (flags_int >> 4) & 0b111,
+        'RCODE': (flags_int) & 0b1111
+    }
+    return flags
+
 import struct
 def parse_header(reader):
-    items = struct.unpack("!HHHHHH",reader.read(12))                           # H: 2-byte integer, I: 4-byte integer
+    items = struct.unpack("!HHHHHH",reader.read(12))                            # H: 2-byte integer, I: 4-byte integer
+    flags =  parse_flags(items[1])  
+    if (rcode := flags['RCODE']) != 0:
+        raise Exception("rcode: "+str(rcode))
     return DNSHeader(*items)
 
 def decode_simple_name(reader):
@@ -40,7 +56,7 @@ def decode_compressed_name(length,reader):
     current_pos = reader.tell()                                                 # save reader position to come back later
     reader.seek(name_pointer)                                                   # go to pointer location for getting the name 
     result = decode_simple_name(reader)                                         # normal name, so decode using prev way
-    reader.seek(current_pos)                                                    # reset pointer after the compressed record name
+    reader.seek(current_pos)                                                    # reset pointer to after the compressed record name
     return result
 
 def parse_question(reader):

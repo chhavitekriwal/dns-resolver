@@ -43,6 +43,6 @@ def resolve(domain_name, record_type):
 import argparse
 
 parser = argparse.ArgumentParser(description="Get the IP of a domain name")
-parser.add_argument("domain_name")
+parser.add_argument("domain_name",help="The domain name whose IP is to be requested for.")
 args = parser.parse_args()
 print(resolve(args.domain_name,TYPE_A))
