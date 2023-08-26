@@ -39,5 +39,10 @@ def resolve(domain_name, record_type):
             server = resolve(ns,1)
         else:
             raise Exception("something went wrong")                 # TODO: Better error handling
-        
-print(resolve("chhavitekriwal.me",TYPE_A))
+
+import argparse
+
+parser = argparse.ArgumentParser(description="Get the IP of a domain name")
+parser.add_argument("domain_name")
+args = parser.parse_args()
+print(resolve(args.domain_name,TYPE_A))
