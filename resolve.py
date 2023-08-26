@@ -40,4 +40,4 @@ def resolve(domain_name, record_type):
         else:
             raise Exception("something went wrong")                 # TODO: Better error handling
         
-print(resolve("twitter.com",TYPE_A))
+print(resolve("chhavitekriwal.me",TYPE_A))

@@ -38,7 +38,7 @@ CLASS_IN = 1
 
 def build_query(domain_name,record_type):
     header_id = random.randint(0,65536)
-    header = DNSHeader(header_id,1,1)
+    header = DNSHeader(header_id,0,1)
 
     question = DNSQuestion(encode_domain_name(domain_name),record_type,CLASS_IN)
     query = header_to_bytes(header) + question_to_bytes(question)
